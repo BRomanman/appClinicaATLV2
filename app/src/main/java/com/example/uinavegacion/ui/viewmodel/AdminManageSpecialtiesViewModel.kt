@@ -3,7 +3,6 @@ package com.example.uinavegacion.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.uinavegacion.data.local.specialty.SpecialtyEntity
-import com.example.uinavegacion.data.repository.SpecialtyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update

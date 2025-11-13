@@ -15,7 +15,6 @@ import com.example.uinavegacion.navigation.AppNavGraph
 import com.example.uinavegacion.ui.theme.UINavegacionTheme
 import com.example.uinavegacion.data.repository.AppointmentRepository
 // 1. Importar el nuevo Repositorio
-import com.example.uinavegacion.data.repository.SpecialtyRepository
 import com.example.uinavegacion.data.repository.UserRepository
 import com.example.uinavegacion.data.local.storage.UserPreferences
 // 2. Importar todos los VMs y Factories
@@ -47,10 +46,7 @@ class MainActivity : ComponentActivity() {
     private val appointmentRepository by lazy {
         AppointmentRepository(database.appointmentDao())
     }
-    // 3. INSTANCIAR EL NUEVO REPOSITORIO
-    private val specialtyRepository by lazy {
-        SpecialtyRepository(database.specialtyDao())
-    }
+
 
     // --- ViewModels ---
     private val authViewModel: AuthViewModel by viewModels {
@@ -79,9 +75,7 @@ class MainActivity : ComponentActivity() {
     }
 
     // 4. INSTANCIAR EL NUEVO VIEWMODEL DE GESTIÓN
-    private val adminManageSpecialtiesViewModel: AdminManageSpecialtiesViewModel by viewModels {
-        AdminManageSpecialtiesViewModelFactory(specialtyRepository)
-    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,8 +93,7 @@ class MainActivity : ComponentActivity() {
                         doctorMenuViewModel = doctorMenuViewModel,
                         adminMenuViewModel = adminMenuViewModel,
                         patientProfileViewModel = patientProfileViewModel,
-                        doctorProfileViewModel = doctorProfileViewModel,
-                        adminManageSpecialtiesViewModel = adminManageSpecialtiesViewModel // <-- 5. Pasar el VM
+                        doctorProfileViewModel = doctorProfileViewModel
                     )
                 }
             }
