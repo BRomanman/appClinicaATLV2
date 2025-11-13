@@ -17,40 +17,42 @@ import com.example.uinavegacion.ui.viewmodel.BookAppointmentUiState
 
 /**
  * Pantalla para Agendar Cita (conectada al VM).
- * Sigue el patrón de LoginScreenVm.
  */
 @Composable
 fun BookAppointmentScreenVm(
     vm: AppointmentViewModel,
-    onBookingSuccessNavigate: () -> Unit // Acción para navegar tras éxito
+    onBookingSuccessNavigate: () -> Unit,
+    onGoToDoctorProfile: (Long) -> Unit // <-- 1. AÑADIDA NUEVA LAMBDA
 ) {
-    // 1. Observamos el ESTADO ÚNICO
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    // 2. Reaccionamos a los eventos de éxito (igual que en LoginScreen)
     LaunchedEffect(state.bookingSuccess) {
         if (state.bookingSuccess) {
-            vm.clearBookingResult() // Limpia la bandera en el VM
-            onBookingSuccessNavigate() // Navega
+            vm.clearBookingResult()
+            onBookingSuccessNavigate()
         }
     }
 
-    // 3. Delegamos la UI a la pantalla presentacional
     BookAppointmentScreen(
         state = state,
         onSpecialtyChange = vm::onSpecialtyChange,
         onDoctorChange = vm::onDoctorChange,
         onDateChange = vm::onDateChange,
         onTimeChange = vm::onTimeChange,
-        onSubmit = vm::submitBooking
+        onSubmit = vm::submitBooking,
+        onViewProfile = {
+            // El botón solo está activo si el ID no es nulo
+            state.selectedDoctorId?.let { id ->
+                onGoToDoctorProfile(id) // <-- 2. LLAMAR A LA NAVEGACIÓN
+            }
+        }
     )
 }
 
 /**
  * Pantalla presentacional para Agendar Cita.
- * Solo recibe estado y lambdas.
  */
-@OptIn(ExperimentalMaterial3Api::class) // Necesario para ExposedDropdownMenuBox
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BookAppointmentScreen(
     state: BookAppointmentUiState,
@@ -58,16 +60,17 @@ private fun BookAppointmentScreen(
     onDoctorChange: (UserEntity) -> Unit,
     onDateChange: (String) -> Unit,
     onTimeChange: (String) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onViewProfile: () -> Unit // <-- 3. AÑADIDA NUEVA LAMBDA
 ) {
-    val bg = MaterialTheme.colorScheme.tertiaryContainer // Fondo distinto
+    val bg = MaterialTheme.colorScheme.tertiaryContainer
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()), // Para pantallas pequeñas
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -92,23 +95,34 @@ private fun BookAppointmentScreen(
         )
         Spacer(Modifier.height(8.dp))
 
-        // --- 2. Dropdown de Doctores (depende de especialidad) ---
-        DropdownMenuField(
-            label = "Doctor",
-            options = state.doctors.map { it.name }, // Mostramos nombres
-            selectedOptionText = state.selectedDoctorName,
-            onOptionSelected = { name ->
-                // Buscamos el UserEntity completo por el nombre
-                val doctor = state.doctors.first { it.name == name }
-                onDoctorChange(doctor)
-            },
-            enabled = !state.isBooking && state.doctors.isNotEmpty(),
-            isLoading = state.isLoadingDoctors
-        )
+        // --- 2. Dropdown de Doctores ---
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.weight(1f)) {
+                DropdownMenuField(
+                    label = "Doctor",
+                    options = state.doctors.map { it.name },
+                    selectedOptionText = state.selectedDoctorName,
+                    onOptionSelected = { name ->
+                        val doctor = state.doctors.first { it.name == name }
+                        onDoctorChange(doctor)
+                    },
+                    enabled = !state.isBooking && state.doctors.isNotEmpty(),
+                    isLoading = state.isLoadingDoctors
+                )
+            }
+            // 4. AÑADIDO BOTÓN "VER PERFIL"
+            TextButton(
+                onClick = onViewProfile,
+                // Solo activo si un doctor está seleccionado y no se está agendando
+                enabled = !state.isBooking && state.selectedDoctorId != null,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text("Ver Perfil")
+            }
+        }
         Spacer(Modifier.height(8.dp))
 
-        // --- 3. Selector de Fecha (simplificado como TextField) ---
-        // TODO: Reemplazar con un DatePicker Dialog
+        // --- 3. Selector de Fecha ---
         OutlinedTextField(
             value = state.selectedDate,
             onValueChange = onDateChange,
@@ -120,7 +134,7 @@ private fun BookAppointmentScreen(
         )
         Spacer(Modifier.height(8.dp))
 
-        // --- 4. Dropdown de Horas (depende de fecha) ---
+        // --- 4. Dropdown de Horas ---
         DropdownMenuField(
             label = "Hora",
             options = state.availableTimes,
@@ -156,6 +170,7 @@ private fun BookAppointmentScreen(
 
 /**
  * Componente reutilizable para un Dropdown Menu (Selector).
+ * (Sin cambios)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -165,7 +180,8 @@ private fun DropdownMenuField(
     selectedOptionText: String,
     onOptionSelected: (String) -> Unit,
     enabled: Boolean = true,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    isError: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -176,7 +192,7 @@ private fun DropdownMenuField(
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(), // Importante
+                .menuAnchor(),
             readOnly = true,
             value = selectedOptionText,
             onValueChange = {},
@@ -189,7 +205,8 @@ private fun DropdownMenuField(
                 }
             },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-            enabled = enabled
+            enabled = enabled,
+            isError = isError
         )
         ExposedDropdownMenu(
             expanded = expanded,

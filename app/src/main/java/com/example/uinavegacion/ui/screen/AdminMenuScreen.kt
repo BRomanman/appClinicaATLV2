@@ -7,12 +7,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+// 1. Importar íconos nuevos
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-// 1. Importar los DTOs, Entidades y VM/State
 import com.example.uinavegacion.data.local.appointment.FullAppointmentDetails
 import com.example.uinavegacion.data.local.user.UserEntity
 import com.example.uinavegacion.ui.viewmodel.AdminMenuUiState
@@ -30,38 +35,42 @@ import kotlinx.coroutines.launch
 
 /**
  * Pantalla (conectada al VM) para "Menú de Admin".
- * Sigue el patrón de LoginScreenVm.
  */
 @Composable
 fun AdminMenuScreenVm(
-    vm: AdminMenuViewModel, // <-- 2. Recibe el VM
-    onLogout: () -> Unit // Lambda para cerrar sesión
+    vm: AdminMenuViewModel,
+    onGoToManageSpecialties: () -> Unit, // <-- 2. AÑADIDA NUEVA LAMBDA
+    onLogout: () -> Unit
 ) {
-    // 3. Observamos el ESTADO ÚNICO
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    // 4. Delegamos la UI a la pantalla presentacional
     AdminMenuScreen(
         state = state,
-        onRefresh = vm::loadAdminDashboard, // Exponemos la acción de refrescar
+        onRefresh = vm::loadAdminDashboard,
+        onGoToManageSpecialties = onGoToManageSpecialties, // <-- 3. PASAR LAMBDA
         onLogout = onLogout
     )
 }
 
 /**
  * Pantalla presentacional para "Menú de Admin".
- * Muestra el saludo y pestañas con listas.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun AdminMenuScreen(
     state: AdminMenuUiState,
     onRefresh: () -> Unit,
+    onGoToManageSpecialties: () -> Unit, // <-- 4. RECIBIR LAMBDA
     onLogout: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState(pageCount = { 2 }) // 0 = Usuarios, 1 = Citas
-    val tabTitles = listOf("Usuarios", "Citas")
+    // 5. Estado para las pestañas
+    val pagerState = rememberPagerState(pageCount = { 3 }) // 0=Usuarios, 1=Citas, 2=Gestión
+    val tabTitles = listOf(
+        "Usuarios" to Icons.Default.Groups,
+        "Citas" to Icons.Default.ListAlt,
+        "Gestión" to Icons.Default.Assignment
+    )
 
     Scaffold(
         topBar = {
@@ -89,14 +98,11 @@ private fun AdminMenuScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when {
-                // 1. Estado de Carga
                 state.isLoading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
-
-                // 2. Estado de Error
                 state.errorMsg != null -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
@@ -107,37 +113,33 @@ private fun AdminMenuScreen(
                         )
                     }
                 }
-
-                // 3. Estado con Datos (Éxito)
                 else -> {
-                    // Saludo
                     Text(
                         text = "Bienvenido, ${state.adminName}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(16.dp)
                     )
 
-                    // Pestañas (Tabs)
                     TabRow(selectedTabIndex = pagerState.currentPage) {
-                        tabTitles.forEachIndexed { index, title ->
+                        tabTitles.forEachIndexed { index, (title, icon) ->
                             Tab(
                                 selected = pagerState.currentPage == index,
                                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                                text = { Text(text = title) }
+                                text = { Text(text = title) },
+                                icon = { Icon(icon, contentDescription = title) }
                             )
                         }
                     }
 
-                    // Contenido de las Pestañas
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize()
                     ) { page ->
                         when (page) {
-                            // Página 0: Lista de Usuarios
                             0 -> AdminUserList(users = state.allUsers)
-                            // Página 1: Lista de Citas
                             1 -> AdminAppointmentList(appointments = state.allAppointments)
+                            // 6. AÑADIDA NUEVA PÁGINA DE GESTIÓN
+                            2 -> AdminManagementPage(onGoToManageSpecialties = onGoToManageSpecialties)
                         }
                     }
                 }
@@ -146,9 +148,39 @@ private fun AdminMenuScreen(
     }
 }
 
-/**
- * Muestra la lista de TODOS los usuarios.
- */
+// 7. AÑADIDO NUEVO COMPOSABLE PARA LA PÁGINA 2
+@Composable
+private fun AdminManagementPage(
+    onGoToManageSpecialties: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Herramientas de Gestión",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        // Botón para gestionar especialidades
+        Button(
+            onClick = onGoToManageSpecialties,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Gestionar Especialidades")
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // (Aquí añadiremos el botón "Gestionar Doctores" en el Paso 17)
+    }
+}
+
+
+// (AdminUserList, AdminAppointmentList, AdminUserCard, AdminAppointmentCard sin cambios)
 @Composable
 private fun AdminUserList(users: List<UserEntity>) {
     if (users.isEmpty()) {
@@ -157,7 +189,6 @@ private fun AdminUserList(users: List<UserEntity>) {
         }
         return
     }
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -168,10 +199,6 @@ private fun AdminUserList(users: List<UserEntity>) {
         }
     }
 }
-
-/**
- * Muestra la lista de TODAS las citas.
- */
 @Composable
 private fun AdminAppointmentList(appointments: List<FullAppointmentDetails>) {
     if (appointments.isEmpty()) {
@@ -180,7 +207,6 @@ private fun AdminAppointmentList(appointments: List<FullAppointmentDetails>) {
         }
         return
     }
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -191,9 +217,6 @@ private fun AdminAppointmentList(appointments: List<FullAppointmentDetails>) {
         }
     }
 }
-
-// --- Tarjetas de UI ---
-
 @Composable
 private fun AdminUserCard(user: UserEntity) {
     Card(
@@ -222,9 +245,15 @@ private fun AdminUserCard(user: UserEntity) {
             Divider(modifier = Modifier.padding(vertical = 4.dp))
             Text("Email: ${user.email}", style = MaterialTheme.typography.bodySmall)
             Text("Tel: ${user.phone}", style = MaterialTheme.typography.bodySmall)
+            // Mostramos el salario
             if (user.role == "doctor") {
                 Text(
                     text = "Especialidad: ${user.specialty ?: "N/A"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "Salario: $${user.salary ?: 0.0}", // <-- Mostramos el salario
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium
                 )
@@ -232,7 +261,6 @@ private fun AdminUserCard(user: UserEntity) {
         }
     }
 }
-
 @Composable
 private fun AdminAppointmentCard(item: FullAppointmentDetails) {
     Card(

@@ -3,6 +3,8 @@ package com.example.uinavegacion.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+// 1. Importar el nuevo ícono
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material.icons.filled.Logout
@@ -14,29 +16,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-// 1. Importar el VM y el State
 import com.example.uinavegacion.ui.viewmodel.PatientMenuUiState
 import com.example.uinavegacion.ui.viewmodel.PatientMenuViewModel
 
 /**
  * Pantalla (conectada al VM) para el Menú de Paciente.
- * Sigue el patrón de LoginScreenVm.
  */
 @Composable
 fun PatientMenuScreenVm(
-    vm: PatientMenuViewModel, // <-- 2. Recibe el VM
+    vm: PatientMenuViewModel,
     onGoBookAppointment: () -> Unit,
     onGoMyReservations: () -> Unit,
+    onGoToProfile: () -> Unit, // <-- 2. AÑADIDO
     onLogout: () -> Unit
 ) {
-    // 3. Observamos el ESTADO ÚNICO
     val state by vm.uiState.collectAsStateWithLifecycle()
 
-    // 4. Delegamos la UI a la pantalla presentacional
     PatientMenuScreen(
-        state = state, // <-- Pasamos el estado
+        state = state,
         onGoBookAppointment = onGoBookAppointment,
         onGoMyReservations = onGoMyReservations,
+        onGoToProfile = onGoToProfile, // <-- 3. AÑADIDO
         onLogout = onLogout
     )
 }
@@ -44,13 +44,13 @@ fun PatientMenuScreenVm(
 
 /**
  * Pantalla presentacional para el Menú de Paciente.
- * Ahora recibe el State y es "tonta".
  */
 @Composable
 private fun PatientMenuScreen(
-    state: PatientMenuUiState, // <-- 5. Recibe el UiState
+    state: PatientMenuUiState,
     onGoBookAppointment: () -> Unit,
     onGoMyReservations: () -> Unit,
+    onGoToProfile: () -> Unit, // <-- 4. AÑADIDO
     onLogout: () -> Unit
 ) {
     val bg = MaterialTheme.colorScheme.primaryContainer
@@ -63,7 +63,6 @@ private fun PatientMenuScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 6. Lógica de UI basada en el estado
         if (state.isLoading) {
             CircularProgressIndicator()
         } else if (state.errorMsg != null) {
@@ -73,7 +72,6 @@ private fun PatientMenuScreen(
                 textAlign = TextAlign.Center
             )
         } else {
-            // 7. ¡AQUÍ ESTÁ LA MAGIA! Usamos el nombre del estado
             Text(
                 text = "Bienvenido, ${state.userName}",
                 style = MaterialTheme.typography.headlineMedium
@@ -89,9 +87,9 @@ private fun PatientMenuScreen(
         )
         Spacer(Modifier.height(40.dp))
 
-        // Botones (sin cambios, pero se desactivarían si está cargando)
         val enabled = !state.isLoading
 
+        // --- Botón 1: Agendar Cita ---
         Button(
             onClick = onGoBookAppointment,
             enabled = enabled,
@@ -103,6 +101,7 @@ private fun PatientMenuScreen(
         }
         Spacer(Modifier.height(12.dp))
 
+        // --- Botón 2: Mis Citas ---
         Button(
             onClick = onGoMyReservations,
             enabled = enabled,
@@ -112,8 +111,21 @@ private fun PatientMenuScreen(
             Spacer(Modifier.width(8.dp))
             Text("Ver Mis Citas")
         }
+        Spacer(Modifier.height(12.dp))
+
+        // --- Botón 3: Mi Perfil (NUEVO) ---
+        Button(
+            onClick = onGoToProfile, // <-- 5. AÑADIDO
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.AccountCircle, contentDescription = "Mi Perfil")
+            Spacer(Modifier.width(8.dp))
+            Text("Ver Mi Perfil")
+        }
         Spacer(Modifier.height(32.dp))
 
+        // --- Botón 4: Cerrar Sesión ---
         OutlinedButton(
             onClick = onLogout,
             enabled = enabled,

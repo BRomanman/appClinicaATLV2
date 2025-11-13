@@ -14,9 +14,13 @@ import com.example.uinavegacion.data.local.database.AppDatabase
 import com.example.uinavegacion.navigation.AppNavGraph
 import com.example.uinavegacion.ui.theme.UINavegacionTheme
 import com.example.uinavegacion.data.repository.AppointmentRepository
+// 1. Importar el nuevo Repositorio
+import com.example.uinavegacion.data.repository.SpecialtyRepository
 import com.example.uinavegacion.data.repository.UserRepository
 import com.example.uinavegacion.data.local.storage.UserPreferences
-// 1. Importar todos los VMs y Factories
+// 2. Importar todos los VMs y Factories
+import com.example.uinavegacion.ui.viewmodel.AdminManageSpecialtiesViewModel
+import com.example.uinavegacion.ui.viewmodel.AdminManageSpecialtiesViewModelFactory
 import com.example.uinavegacion.ui.viewmodel.AdminMenuViewModel
 import com.example.uinavegacion.ui.viewmodel.AdminMenuViewModelFactory
 import com.example.uinavegacion.ui.viewmodel.AppointmentViewModel
@@ -25,10 +29,14 @@ import com.example.uinavegacion.ui.viewmodel.AuthViewModel
 import com.example.uinavegacion.ui.viewmodel.AuthViewModelFactory
 import com.example.uinavegacion.ui.viewmodel.DoctorMenuViewModel
 import com.example.uinavegacion.ui.viewmodel.DoctorMenuViewModelFactory
+import com.example.uinavegacion.ui.viewmodel.DoctorProfileViewModel
+import com.example.uinavegacion.ui.viewmodel.DoctorProfileViewModelFactory
 import com.example.uinavegacion.ui.viewmodel.MyReservationsViewModel
 import com.example.uinavegacion.ui.viewmodel.MyReservationsViewModelFactory
 import com.example.uinavegacion.ui.viewmodel.PatientMenuViewModel
 import com.example.uinavegacion.ui.viewmodel.PatientMenuViewModelFactory
+import com.example.uinavegacion.ui.viewmodel.PatientProfileViewModel
+import com.example.uinavegacion.ui.viewmodel.PatientProfileViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
@@ -38,6 +46,10 @@ class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserRepository(database.userDao()) }
     private val appointmentRepository by lazy {
         AppointmentRepository(database.appointmentDao())
+    }
+    // 3. INSTANCIAR EL NUEVO REPOSITORIO
+    private val specialtyRepository by lazy {
+        SpecialtyRepository(database.specialtyDao())
     }
 
     // --- ViewModels ---
@@ -56,10 +68,19 @@ class MainActivity : ComponentActivity() {
     private val doctorMenuViewModel: DoctorMenuViewModel by viewModels {
         DoctorMenuViewModelFactory(userRepository, appointmentRepository, userPreferences)
     }
-
-    // 2. INSTANCIAR EL NUEVO VIEWMODEL DE ADMIN
     private val adminMenuViewModel: AdminMenuViewModel by viewModels {
         AdminMenuViewModelFactory(userRepository, appointmentRepository, userPreferences)
+    }
+    private val patientProfileViewModel: PatientProfileViewModel by viewModels {
+        PatientProfileViewModelFactory(userRepository, appointmentRepository, userPreferences)
+    }
+    private val doctorProfileViewModel: DoctorProfileViewModel by viewModels {
+        DoctorProfileViewModelFactory(userRepository, appointmentRepository)
+    }
+
+    // 4. INSTANCIAR EL NUEVO VIEWMODEL DE GESTIÓN
+    private val adminManageSpecialtiesViewModel: AdminManageSpecialtiesViewModel by viewModels {
+        AdminManageSpecialtiesViewModelFactory(specialtyRepository)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +97,10 @@ class MainActivity : ComponentActivity() {
                         patientMenuViewModel = patientMenuViewModel,
                         myReservationsViewModel = myReservationsViewModel,
                         doctorMenuViewModel = doctorMenuViewModel,
-                        adminMenuViewModel = adminMenuViewModel // <-- 3. Pasar el VM
+                        adminMenuViewModel = adminMenuViewModel,
+                        patientProfileViewModel = patientProfileViewModel,
+                        doctorProfileViewModel = doctorProfileViewModel,
+                        adminManageSpecialtiesViewModel = adminManageSpecialtiesViewModel // <-- 5. Pasar el VM
                     )
                 }
             }
@@ -91,7 +115,10 @@ fun AppRoot(
     patientMenuViewModel: PatientMenuViewModel,
     myReservationsViewModel: MyReservationsViewModel,
     doctorMenuViewModel: DoctorMenuViewModel,
-    adminMenuViewModel: AdminMenuViewModel // <-- 4. Recibir el VM
+    adminMenuViewModel: AdminMenuViewModel,
+    patientProfileViewModel: PatientProfileViewModel,
+    doctorProfileViewModel: DoctorProfileViewModel,
+    adminManageSpecialtiesViewModel: AdminManageSpecialtiesViewModel // <-- 6. Recibir el VM
 ) {
     val navController = rememberNavController()
     AppNavGraph(
@@ -101,6 +128,9 @@ fun AppRoot(
         patientMenuViewModel = patientMenuViewModel,
         myReservationsViewModel = myReservationsViewModel,
         doctorMenuViewModel = doctorMenuViewModel,
-        adminMenuViewModel = adminMenuViewModel // <-- 5. Pasar el VM al NavGraph
+        adminMenuViewModel = adminMenuViewModel,
+        patientProfileViewModel = patientProfileViewModel,
+        doctorProfileViewModel = doctorProfileViewModel,
+        adminManageSpecialtiesViewModel = adminManageSpecialtiesViewModel // <-- 7. Pasar el VM al NavGraph
     )
 }

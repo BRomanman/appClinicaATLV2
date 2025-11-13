@@ -7,25 +7,29 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.uinavegacion.data.local.user.UserDao
 import com.example.uinavegacion.data.local.user.UserEntity
-// 1. IMPORTAR LA NUEVA ENTIDAD Y DAO
 import com.example.uinavegacion.data.local.appointment.AppointmentDao
 import com.example.uinavegacion.data.local.appointment.AppointmentEntity
+// 1. IMPORTAR LA NUEVA ENTIDAD Y DAO
+import com.example.uinavegacion.data.local.specialty.SpecialtyDao
+import com.example.uinavegacion.data.local.specialty.SpecialtyEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-// 2. AÑADIR APPOINTMENTENTITY A LA LISTA DE ENTIDADES
-//    Incrementamos la versión de la DB porque cambiamos el esquema
+// 2. AÑADIR SPECIALTYENTITY A LA LISTA DE ENTIDADES
+//    Incrementamos la versión de la DB de 2 a 3
 @Database(
-    entities = [UserEntity::class, AppointmentEntity::class], // <-- AÑADIDO
-    version = 2, // <-- INCREMENTADO
+    entities = [UserEntity::class, AppointmentEntity::class, SpecialtyEntity::class], // <-- AÑADIDO
+    version = 3, // <-- INCREMENTADO
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    // 3. EXPONER EL NUEVO DAO
     abstract fun userDao(): UserDao
-    abstract fun appointmentDao(): AppointmentDao // <-- AÑADIDO
+    abstract fun appointmentDao(): AppointmentDao
+
+    // 3. EXPONER EL NUEVO DAO
+    abstract fun specialtyDao(): SpecialtyDao // <-- AÑADIDO
 
     companion object {
         @Volatile
@@ -43,51 +47,52 @@ abstract class AppDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             CoroutineScope(Dispatchers.IO).launch {
-                                val dao = getInstance(context).userDao()
-                                // 4. AÑADIMOS DATOS DE PRUEBA (SEED) PARA PACIENTES Y DOCTORES
-                                val seed = listOf(
-                                    // Administrador
+                                // 4. DATOS DE PRUEBA (SEEDING)
+                                // Añadimos salarios a los doctores y precargamos especialidades
+
+                                val userDao = getInstance(context).userDao()
+                                val specialtyDao = getInstance(context).specialtyDao()
+
+                                // Usuarios (con salarios)
+                                val users = listOf(
                                     UserEntity(
-                                        name = "Admin",
-                                        email = "admin@duoc.cl",
-                                        phone = "+56911111111",
-                                        password = "Admin123!",
-                                        role = "admin" // <-- ROL AÑADIDO
-                                    ),
-                                    // Paciente
-                                    UserEntity(
-                                        name = "Víctor Rosendo",
-                                        email = "victor@duoc.cl",
-                                        phone = "+56922222222",
-                                        password = "123456",
-                                        role = "paciente" // <-- ROL AÑADIDO
-                                    ),
-                                    // Doctores
-                                    UserEntity(
-                                        name = "Dr. Juan Pérez",
-                                        email = "jperez@duoc.cl",
-                                        phone = "+56933333333",
-                                        password = "123456",
-                                        role = "doctor", // <-- ROL AÑADIDO
-                                        specialty = "Cardiología"
+                                        name = "Admin", email = "admin@duoc.cl", phone = "+56911111111",
+                                        password = "Admin123!", role = "admin"
                                     ),
                                     UserEntity(
-                                        name = "Dra. Ana Gómez",
-                                        email = "agomez@duoc.cl",
-                                        phone = "+56944444444",
-                                        password = "123456",
-                                        role = "doctor", // <-- ROL AÑADIDO
-                                        specialty = "Dermatología"
+                                        name = "Víctor Rosendo", email = "victor@duoc.cl", phone = "+56922222222",
+                                        password = "123456", role = "paciente"
+                                    ),
+                                    UserEntity(
+                                        name = "Dr. Juan Pérez", email = "jperez@duoc.cl", phone = "+56933333333",
+                                        password = "123456", role = "doctor", specialty = "Cardiología",
+                                        salary = 2500000.0 // <-- SALARIO AÑADIDO
+                                    ),
+                                    UserEntity(
+                                        name = "Dra. Ana Gómez", email = "agomez@duoc.cl", phone = "+56944444444",
+                                        password = "123456", role = "doctor", specialty = "Dermatología",
+                                        salary = 2200000.0 // <-- SALARIO AÑADIDO
                                     )
                                 )
 
-                                if (dao.count() == 0) {
-                                    seed.forEach { dao.insert(it) }
+                                // Especialidades (con precios)
+                                val specialties = listOf(
+                                    SpecialtyEntity(name = "Cardiología", price = 35000.0),
+                                    SpecialtyEntity(name = "Dermatología", price = 40000.0),
+                                    SpecialtyEntity(name = "Medicina General", price = 25000.0),
+                                    SpecialtyEntity(name = "Nutrición", price = 30000.0),
+                                    SpecialtyEntity(name = "Pediatría", price = 32000.0)
+                                )
+
+                                // Insertar todo si la base de datos está vacía
+                                if (userDao.count() == 0) {
+                                    users.forEach { userDao.insert(it) }
+                                    specialties.forEach { specialtyDao.insert(it) }
                                 }
                             }
                         }
                     })
-                    // Al subir de versión 1 a 2, destruimos y recreamos la DB
+                    // Al subir de versión 2 a 3, destruimos y recreamos la DB
                     .fallbackToDestructiveMigration()
                     .build()
 
