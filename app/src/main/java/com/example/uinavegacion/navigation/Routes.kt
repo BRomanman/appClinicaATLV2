@@ -19,5 +19,4 @@ sealed class Route(val path: String) {
 
     // --- AÑADIDA NUEVA RUTA DE ADMIN ---
     object AdminManageSpecialties : Route("admin_manage_specialties")
-    // (Añadiremos la ruta para editar doctores/estadísticas después)
 }

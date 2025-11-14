@@ -38,24 +38,24 @@ fun HomeScreen(
 ) {
     // Definimos los datos estáticos que tenía la HomeScreen original
     val especialidadesList = listOf(
-        Especialidad("Cardiología", R.drawable.doctor_cardio_1),
-        Especialidad("Dermatología", R.drawable.doctor_derma_1),
-        Especialidad("Medicina General", R.drawable.doctor_medgen_1),
-        Especialidad("Nutrición", R.drawable.doctor_nutri_1),
-        Especialidad("Pediatría", R.drawable.doctor_pedi_1),
-        Especialidad("Psicología", R.drawable.doctor_psico_1)
+        Especialidad("Cardiología", R.drawable.atencion_1),
+        Especialidad("Dermatología", R.drawable.atencion_1),
+        Especialidad("Medicina General", R.drawable.atencion_1),
+        Especialidad("Nutrición", R.drawable.atencion_1),
+        Especialidad("Pediatría", R.drawable.atencion_1),
+        Especialidad("Psicología", R.drawable.atencion_1)
     )
 
     val clinicasList = listOf(
-        Clinica("Clínica ATL Viña del Mar", "Av. Libertad 123, Viña del Mar", R.drawable.clinica_1),
-        Clinica("Clínica ATL Santiago", "Av. Providencia 456, Santiago", R.drawable.clinica_2),
-        Clinica("Clínica ATL Rancagua", "Av. O'Higgins 789, Rancagua", R.drawable.clinica_3)
+        Clinica("Clínica ATL Viña del Mar", "Av. Libertad 123, Viña del Mar", R.drawable.atencion_1),
+        Clinica("Clínica ATL Santiago", "Av. Providencia 456, Santiago", R.drawable.atencion_1),
+        Clinica("Clínica ATL Rancagua", "Av. O'Higgins 789, Rancagua", R.drawable.atencion_1)
     )
 
     val segurosList = listOf(
-        Seguro("Seguro de Salud", R.drawable.seguro_salud_1),
-        Seguro("Seguro de Vida", R.drawable.seguro_vida_1),
-        Seguro("Seguro Empresarial", R.drawable.seguro_empresarial1)
+        Seguro("Seguro de Salud", R.drawable.atencion_1),
+        Seguro("Seguro de Vida", R.drawable.atencion_1),
+        Seguro("Seguro Empresarial", R.drawable.atencion_1)
     )
 
     // Layout principal con scroll

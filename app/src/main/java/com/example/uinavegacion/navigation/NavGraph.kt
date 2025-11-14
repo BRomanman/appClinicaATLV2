@@ -104,10 +104,7 @@ fun AppNavGraph(
     // 7. AÑADIR "GESTIÓN" AL DRAWER (solo para admin, pero lo ponemos visible por ahora)
     val drawerItems = mutableListOf(
         DrawerItem("Home", Icons.Default.Home, { scope.launch { drawerState.close() }; goHome() }),
-        DrawerItem(
-            "Mi Perfil",
-            Icons.Default.AccountCircle,
-            { scope.launch { drawerState.close() }; goPatientProfile() }),
+        DrawerItem("Mi Perfil", Icons.Default.AccountCircle, { scope.launch { drawerState.close() }; goPatientProfile() }),
         DrawerItem("Agendar Cita", Icons.Default.Event, { scope.launch { drawerState.close() }; goBookAppointment() }),
         DrawerItem("Mis Citas", Icons.Default.CalendarMonth, { scope.launch { drawerState.close() }; goMyReservations() }),
         DrawerItem("(Admin) Especialidades", Icons.Default.Assignment, { scope.launch { drawerState.close() }; goManageSpecialties() }), // <-- NUEVO

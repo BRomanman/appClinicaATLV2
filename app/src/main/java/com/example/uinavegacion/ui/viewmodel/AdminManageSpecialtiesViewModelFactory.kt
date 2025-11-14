@@ -2,6 +2,8 @@ package com.example.uinavegacion.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+// 1. AÑADIMOS EL IMPORT QUE FALTABA
+import com.example.uinavegacion.data.repository.SpecialtyRepository
 
 /**
  * Factory para crear AdminManageSpecialtiesViewModel con sus dependencias.
